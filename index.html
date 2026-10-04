@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#0f1113">
+  <title>Randomizer</title>
+
+  <style>
+    :root {
+      --bg: #0f1113;
+      --panel: #191c20;
+      --panel2: #22262b;
+      --text: #f3f4f6;
+      --muted: #9ca3af;
+      --border: #343941;
+      --accent: #d7d2b2;
+      --accentText: #111318;
+      --danger: #ef8b8b;
+      --safeBottom: env(safe-area-inset-bottom, 0px);
+      --safeTop: env(safe-area-inset-top, 0px);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      margin: 0;
+      width: 100%;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      overscroll-behavior: none;
+    }
+
+    body {
+      min-height: 100dvh;
+      padding-top: var(--safeTop);
+      padding-bottom: calc(96px + var(--safeBottom));
+    }
+
+    button {
+      font: inherit;
+    }
+
+    .app {
+      width: min(100%, 1100px);
+      margin: 0 auto;
+      padding: 12px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .title-wrap {
+      min-width: 0;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1rem, 4vw, 1.35rem);
+      line-height: 1.1;
+      white-space: nowrap;
+    }
+
+    .subtitle {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .small-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: var(--text);
+      min-width: 44px;
+      min-height: 44px;
+      padding: 8px 12px;
+      border-radius: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .status {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .status-box {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 8px 6px;
+      text-align: center;
+    }
+
+    .status-value {
+      display: block;
+      font-weight: 800;
+      font-size: 1.15rem;
+    }
+
+    .status-label {
+      display: block;
+      margin-top: 1px;
+      color: var(--muted);
+      font-size: 0.67rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .event {
+      display: none;
+      border: 1px solid var(--danger);
+      color: var(--danger);
+      background: color-mix(in srgb, var(--danger) 8%, transparent);
+      border-radius: 12px;
+      padding: 10px 12px;
+      margin-bottom: 10px;
+      text-align: center;
+      font-weight: 800;
+      font-size: 0.9rem;
+    }
+
+    .random-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .random-box {
+      position: relative;
+      min-height: clamp(150px, 28vh, 250px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      overflow: hidden;
+    }
+
+    .random-box.primary-c {
+      background: #24313a;
+      border-color: #526b7a;
+    }
+
+    .random-box.primary-c .random-label {
+      color: #b9d7e8;
+    }
+
+    .random-box.primary-c .random-value {
+      color: #dff3ff;
+    }
+
+    .random-label {
+      position: absolute;
+      top: 12px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      color: var(--muted);
+      font-size: clamp(0.72rem, 2.7vw, 0.9rem);
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .random-value {
+      font-size: clamp(4rem, 20vw, 8.5rem);
+      font-weight: 900;
+      line-height: 0.85;
+      letter-spacing: -0.05em;
+    }
+
+    .placeholder {
+      color: #545a63;
+    }
+
+    .use-hint {
+      margin: 10px 2px 0;
+      color: var(--muted);
+      font-size: 0.78rem;
+      text-align: center;
+      line-height: 1.35;
+    }
+
+    .history-panel {
+      margin-top: 10px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    .history-toggle {
+      width: 100%;
+      border: 0;
+      background: transparent;
+      color: var(--text);
+      padding: 13px 14px;
+      text-align: left;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .history-content {
+      display: none;
+      border-top: 1px solid var(--border);
+      padding: 10px 12px 12px;
+    }
+
+    .history-content.open {
+      display: block;
+    }
+
+    .history {
+      margin: 0;
+      padding-left: 24px;
+      max-height: 240px;
+      overflow: auto;
+      color: #d6d9dd;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.78rem;
+    }
+
+    .history li {
+      padding: 3px 0;
+    }
+
+    .draw-bar {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 50;
+      padding: 10px 12px calc(10px + var(--safeBottom));
+      background: linear-gradient(to top, var(--bg) 75%, transparent);
+    }
+
+    .draw-inner {
+      width: min(100%, 1100px);
+      margin: 0 auto;
+    }
+
+    #drawBtn {
+      width: 100%;
+      min-height: 72px;
+      border: 0;
+      border-radius: 18px;
+      background: var(--accent);
+      color: var(--accentText);
+      font-weight: 950;
+      font-size: clamp(1.25rem, 5vw, 1.8rem);
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(0,0,0,.3);
+      touch-action: manipulation;
+    }
+
+    #drawBtn:active,
+    .icon-btn:active {
+      transform: scale(.985);
+    }
+
+    @media (orientation: landscape) and (min-width: 700px) {
+      body {
+        padding-bottom: calc(86px + var(--safeBottom));
+      }
+
+      .random-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+
+      .random-box {
+        min-height: min(52vh, 360px);
+      }
+
+      .random-value {
+        font-size: clamp(4.5rem, 11vw, 8rem);
+      }
+
+      .app {
+        padding: 10px 16px;
+      }
+
+      #drawBtn {
+        min-height: 62px;
+      }
+    }
+
+    @media (min-width: 900px) and (orientation: portrait) {
+      .random-grid {
+        gap: 14px;
+      }
+
+      .random-box {
+        min-height: 300px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="app">
+    <div class="topbar">
+      <div class="title-wrap">
+        <h1>Randomizer</h1>
+        <div class="subtitle">30 cards + reshuffle</div>
+      </div>
+
+      <div class="small-actions">
+        <button id="historyBtn" class="icon-btn" type="button" aria-label="Mostrar historial">HIST</button>
+        <button id="resetBtn" class="icon-btn" type="button" aria-label="Reiniciar mazo">RESET</button>
+      </div>
+    </div>
+
+    <section class="status" aria-label="Estado del mazo">
+      <div class="status-box">
+        <span id="remaining" class="status-value">—</span>
+        <span class="status-label">Left</span>
+      </div>
+      <div class="status-box">
+        <span id="drawCount" class="status-value">0</span>
+        <span class="status-label">Draws</span>
+      </div>
+      <div class="status-box">
+        <span id="reshuffleCount" class="status-value">0</span>
+        <span class="status-label">Reshuffles</span>
+      </div>
+    </section>
+
+    <div id="event" class="event" role="status" aria-live="polite"></div>
+
+    <section class="random-grid" aria-live="polite">
+      <div class="random-box primary-c">
+        <div class="random-label">C</div>
+        <div id="q" class="random-value placeholder">—</div>
+      </div>
+
+      <div class="random-box">
+        <div class="random-label">X</div>
+        <div id="a" class="random-value placeholder">—</div>
+      </div>
+
+      <div class="random-box">
+        <div class="random-label">Y</div>
+        <div id="b" class="random-value placeholder">—</div>
+      </div>
+
+      <div class="random-box">
+        <div class="random-label">Z</div>
+        <div id="c" class="random-value placeholder">—</div>
+      </div>
+    </section>
+
+    <p class="use-hint">
+      X &nbsp;·&nbsp; Y &nbsp;·&nbsp; Z &nbsp;·&nbsp; C
+    </p>
+
+    <section id="historyPanel" class="history-panel">
+      <button id="historyToggle" class="history-toggle" type="button">
+        <span>History</span>
+        <span id="historyChevron">▼</span>
+      </button>
+      <div id="historyContent" class="history-content">
+        <ol id="history" class="history"></ol>
+      </div>
+    </section>
+  </main>
+
+  <div class="draw-bar">
+    <div class="draw-inner">
+      <button id="drawBtn" type="button">DRAW</button>
+    </div>
+  </div>
+
+  <script>
+    "use strict";
+
+    const RANDOM_CARDS = [
+      {a:1,  b:6,  c:6,  q:2},
+      {a:2,  b:2,  c:8,  q:2},
+      {a:3,  b:10, c:5,  q:5},
+      {a:4,  b:10, c:10, q:2},
+      {a:5,  b:2,  c:7,  q:4},
+      {a:6,  b:9,  c:3,  q:1},
+      {a:7,  b:5,  c:3,  q:1},
+      {a:8,  b:8,  c:10, q:1},
+      {a:9,  b:3,  c:4,  q:6},
+      {a:10, b:3,  c:6,  q:3},
+
+      {a:1,  b:7,  c:1,  q:3},
+      {a:2,  b:4,  c:5,  q:3},
+      {a:3,  b:6,  c:7,  q:6},
+      {a:4,  b:4,  c:2,  q:2},
+      {a:5,  b:7,  c:10, q:6},
+      {a:6,  b:6,  c:1,  q:5},
+      {a:7,  b:8,  c:2,  q:5},
+      {a:8,  b:7,  c:9,  q:6},
+      {a:9,  b:8,  c:9,  q:4},
+      {a:10, b:2,  c:2,  q:5},
+
+      {a:1,  b:5,  c:8,  q:1},
+      {a:2,  b:1,  c:4,  q:4},
+      {a:3,  b:1,  c:8,  q:5},
+      {a:4,  b:9,  c:3,  q:3},
+      {a:5,  b:3,  c:4,  q:6},
+      {a:6,  b:10, c:6,  q:4},
+      {a:7,  b:4,  c:9,  q:3},
+      {a:8,  b:5,  c:7,  q:4},
+      {a:9,  b:1,  c:5,  q:2},
+      {a:10, b:9,  c:1,  q:1}
+    ];
+
+    const RESHUFFLE_CARD = { reshuffle: true };
+
+    let deck = [];
+    let drawCount = 0;
+    let reshuffleCount = 0;
+    let eventTimer = null;
+
+    const $ = id => document.getElementById(id);
+
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    function buildDeck() {
+      const cards = RANDOM_CARDS.map(card => ({...card}));
+      shuffle(cards);
+
+      // Insert reshuffle card near the middle: positions 14-18 in a 31-card deck.
+      const insertIndex = 13 + Math.floor(Math.random() * 5);
+      cards.splice(insertIndex, 0, {...RESHUFFLE_CARD});
+
+      deck = cards;
+      updateStatus();
+    }
+
+    function resetGame() {
+      drawCount = 0;
+      reshuffleCount = 0;
+
+      ["a", "b", "c", "q"].forEach(id => {
+        $(id).textContent = "—";
+        $(id).classList.add("placeholder");
+      });
+
+      $("history").innerHTML = "";
+      hideEvent();
+      buildDeck();
+      updateStatus();
+    }
+
+    function drawCard() {
+      hideEvent();
+
+      if (!deck.length) {
+        buildDeck();
+      }
+
+      const card = deck.shift();
+
+      if (card.reshuffle) {
+        reshuffleCount++;
+        addHistory("RESHUFFLE");
+        showEvent("RESHUFFLE — deck reset");
+
+        // Reconstruct complete deck, shuffle, reinsert reshuffle card,
+        // then immediately draw again for the same .
+        buildDeck();
+        updateStatus();
+
+        return drawCard();
+      }
+
+      drawCount++;
+
+      $("a").textContent = card.a;
+      $("b").textContent = card.b;
+      $("c").textContent = card.c;
+      $("q").textContent = card.q;
+
+      ["a", "b", "c", "q"].forEach(id => {
+        $(id).classList.remove("placeholder");
+      });
+
+      addHistory(`X:${card.a}  Y:${card.b}  Z:${card.c}  C:${card.q}`);
+      updateStatus();
+
+      // Small optional tactile feedback where supported.
+      if (navigator.vibrate) {
+        navigator.vibrate(15);
+      }
+    }
+
+    function addHistory(text) {
+      const li = document.createElement("li");
+      li.textContent = text;
+      $("history").insertBefore(li, $("history").firstChild);
+    }
+
+    function showEvent(text) {
+      clearTimeout(eventTimer);
+      $("event").textContent = text;
+      $("event").style.display = "block";
+
+      eventTimer = setTimeout(() => {
+        hideEvent();
+      }, 2200);
+    }
+
+    function hideEvent() {
+      clearTimeout(eventTimer);
+      $("event").style.display = "none";
+      $("event").textContent = "";
+    }
+
+    function updateStatus() {
+      $("remaining").textContent = deck.length;
+      $("drawCount").textContent = drawCount;
+      $("reshuffleCount").textContent = reshuffleCount;
+    }
+
+    function toggleHistory(forceOpen = null) {
+      const content = $("historyContent");
+      const isOpen = content.classList.contains("open");
+      const shouldOpen = forceOpen === null ? !isOpen : forceOpen;
+
+      content.classList.toggle("open", shouldOpen);
+      $("historyChevron").textContent = shouldOpen ? "▲" : "▼";
+
+      if (shouldOpen) {
+        $("historyPanel").scrollIntoView({behavior: "smooth", block: "nearest"});
+      }
+    }
+
+    $("drawBtn").addEventListener("click", drawCard);
+    $("resetBtn").addEventListener("click", resetGame);
+    $("historyBtn").addEventListener("click", () => toggleHistory());
+    $("historyToggle").addEventListener("click", () => toggleHistory());
+
+    document.addEventListener("keydown", event => {
+      if (event.code === "Space" || event.code === "Enter") {
+        event.preventDefault();
+        drawCard();
+      }
+    });
+
+    resetGame();
+  </script>
+</body>
+</html>
