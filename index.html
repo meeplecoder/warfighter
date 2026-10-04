@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="theme-color" content="#0f1113">
-  <title>Randomizer</title>
+  <title>Warfighter Fate Deck</title>
 
   <style>
     :root {
@@ -20,6 +20,7 @@
       --accent: #d7d2b2;
       --accentText: #111318;
       --danger: #ef8b8b;
+      --good: #4caf7d;
       --scout: #c8a84b;
       --safeBottom: env(safe-area-inset-bottom, 0px);
       --safeTop: env(safe-area-inset-top, 0px);
@@ -394,6 +395,118 @@
         min-height: 300px;
       }
     }
+
+    /* ── Deck Quality Indicator ── */
+
+    .quality-panel {
+      margin-top: 10px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 10px 12px 12px;
+    }
+
+    .quality-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .quality-title {
+      font-size: 0.67rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .deck-temp {
+      font-size: 0.67rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 2px 9px;
+      border-radius: 6px;
+    }
+
+    .deck-temp.hot     { background: color-mix(in srgb, var(--good) 18%, transparent); color: var(--good); }
+    .deck-temp.cold    { background: color-mix(in srgb, var(--danger) 18%, transparent); color: var(--danger); }
+    .deck-temp.neutral { background: var(--panel2); color: var(--muted); }
+
+    .quality-rows {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .quality-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .q-label {
+      font-size: 0.63rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      width: 22px;
+      flex-shrink: 0;
+    }
+
+    .q-bar {
+      flex: 1;
+      height: 9px;
+      border-radius: 5px;
+      overflow: hidden;
+      display: flex;
+      background: var(--panel2);
+    }
+
+    .q-seg {
+      height: 100%;
+      transition: flex 0.25s ease;
+    }
+
+    .q-low  { background: var(--danger); }
+    .q-mid  { background: var(--scout); }
+    .q-high { background: var(--good); }
+
+    .q-count {
+      font-size: 0.6rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      color: var(--muted);
+      white-space: nowrap;
+      width: 80px;
+      flex-shrink: 0;
+      text-align: right;
+    }
+
+    .quality-legend {
+      display: flex;
+      gap: 12px;
+      margin-top: 10px;
+      padding-top: 9px;
+      border-top: 1px solid var(--border);
+      justify-content: center;
+    }
+
+    .q-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.6rem;
+      color: var(--muted);
+    }
+
+    .q-legend-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
   </style>
 </head>
 
@@ -401,8 +514,8 @@
   <main class="app">
     <div class="topbar">
       <div class="title-wrap">
-        <h1>Randomizer</h1>
-        <div class="subtitle">30 cards + reshuffle</div>
+        <h1>Fate Deck</h1>
+        <div class="subtitle">Warfighter WWII · 30 cards</div>
       </div>
 
       <div class="small-actions">
@@ -477,6 +590,56 @@
     <p class="use-hint">
       ATTK 1 &nbsp;·&nbsp; ATTK 2 &nbsp;·&nbsp; ATTK 3 &nbsp;·&nbsp; COVER
     </p>
+
+    <div id="qualityPanel" class="quality-panel">
+      <div class="quality-header">
+        <span class="quality-title">Deck Quality</span>
+        <span id="deckTemp" class="deck-temp neutral">—</span>
+      </div>
+      <div class="quality-rows">
+        <div class="quality-row">
+          <span class="q-label">A1</span>
+          <div class="q-bar">
+            <div id="qa1-low"  class="q-seg q-low"></div>
+            <div id="qa1-mid"  class="q-seg q-mid"></div>
+            <div id="qa1-high" class="q-seg q-high"></div>
+          </div>
+          <span id="qa1-count" class="q-count"></span>
+        </div>
+        <div class="quality-row">
+          <span class="q-label">A2</span>
+          <div class="q-bar">
+            <div id="qa2-low"  class="q-seg q-low"></div>
+            <div id="qa2-mid"  class="q-seg q-mid"></div>
+            <div id="qa2-high" class="q-seg q-high"></div>
+          </div>
+          <span id="qa2-count" class="q-count"></span>
+        </div>
+        <div class="quality-row">
+          <span class="q-label">A3</span>
+          <div class="q-bar">
+            <div id="qa3-low"  class="q-seg q-low"></div>
+            <div id="qa3-mid"  class="q-seg q-mid"></div>
+            <div id="qa3-high" class="q-seg q-high"></div>
+          </div>
+          <span id="qa3-count" class="q-count"></span>
+        </div>
+        <div class="quality-row">
+          <span class="q-label">CV</span>
+          <div class="q-bar">
+            <div id="qcv-low"  class="q-seg q-low"></div>
+            <div id="qcv-mid"  class="q-seg q-mid"></div>
+            <div id="qcv-high" class="q-seg q-high"></div>
+          </div>
+          <span id="qcv-count" class="q-count"></span>
+        </div>
+      </div>
+      <div class="quality-legend">
+        <span class="q-legend-item"><span class="q-legend-dot" style="background:var(--danger)"></span>Low (1–3 / 1–2)</span>
+        <span class="q-legend-item"><span class="q-legend-dot" style="background:var(--scout)"></span>Mid (4–6 / 3–4)</span>
+        <span class="q-legend-item"><span class="q-legend-dot" style="background:var(--good)"></span>High (7–10 / 5–6)</span>
+      </div>
+    </div>
 
     <section id="historyPanel" class="history-panel">
       <button id="historyToggle" class="history-toggle" type="button">
@@ -565,6 +728,7 @@
       hidePeek();
       updateScoutBtn();
       updateStatus();
+      updateQuality();
     }
 
     function resetGame() {
@@ -618,6 +782,7 @@
 
       addHistory(`A1:${card.a}  A2:${card.b}  A3:${card.c}  CV:${card.q}`);
       updateStatus();
+      updateQuality();
 
       if (navigator.vibrate) {
         navigator.vibrate(15);
@@ -691,6 +856,70 @@
       $("remaining").textContent = deck.length;
       $("drawCount").textContent = drawCount;
       $("reshuffleCount").textContent = reshuffleCount;
+    }
+
+    function computeQuality() {
+      const cards = deck.filter(c => !c.reshuffle);
+      const total = cards.length;
+      const slots = {
+        a1: {low: 0, mid: 0, high: 0},
+        a2: {low: 0, mid: 0, high: 0},
+        a3: {low: 0, mid: 0, high: 0},
+        cv: {low: 0, mid: 0, high: 0}
+      };
+
+      const band10 = v => v <= 3 ? 'low' : v <= 6 ? 'mid' : 'high';
+      const band6  = v => v <= 2 ? 'low' : v <= 4 ? 'mid' : 'high';
+
+      cards.forEach(c => {
+        slots.a1[band10(c.a)]++;
+        slots.a2[band10(c.b)]++;
+        slots.a3[band10(c.c)]++;
+        slots.cv[band6(c.q)]++;
+      });
+
+      return {slots, total};
+    }
+
+    function updateQuality() {
+      const {slots, total} = computeQuality();
+
+      const pairs = [
+        ['a1', 'qa1'],
+        ['a2', 'qa2'],
+        ['a3', 'qa3'],
+        ['cv', 'qcv']
+      ];
+
+      pairs.forEach(([slot, id]) => {
+        const {low, mid, high} = slots[slot];
+        $(id + '-low').style.flex  = low;
+        $(id + '-mid').style.flex  = mid;
+        $(id + '-high').style.flex = high;
+        $(id + '-count').textContent = total > 0
+          ? `L:${low} M:${mid} H:${high}`
+          : '—';
+      });
+
+      // Deck temperature badge — based on ATTK 1 high/low proportions
+      const tempEl = $('deckTemp');
+      if (total === 0) {
+        tempEl.textContent = '—';
+        tempEl.className = 'deck-temp neutral';
+        return;
+      }
+      const highPct = slots.a1.high / total;
+      const lowPct  = slots.a1.low  / total;
+      if (highPct > 0.45) {
+        tempEl.textContent = 'HOT';
+        tempEl.className = 'deck-temp hot';
+      } else if (lowPct > 0.35) {
+        tempEl.textContent = 'COLD';
+        tempEl.className = 'deck-temp cold';
+      } else {
+        tempEl.textContent = 'NEUTRAL';
+        tempEl.className = 'deck-temp neutral';
+      }
     }
 
     function toggleHistory(forceOpen = null) {
