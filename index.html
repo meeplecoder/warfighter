@@ -606,7 +606,19 @@
       </div>
       <div class="quality-rows">
         <div class="quality-row">
-          <span class="q-label">A1</span>
+          <span class="q-label">Cover</span>
+          <div class="q-bar">
+            <div id="qcv-low"  class="q-seg q-low"></div>
+            <div id="qcv-mid"  class="q-seg q-mid"></div>
+            <div id="qcv-high" class="q-seg q-high"></div>
+            <div class="q-ref" style="left:33.33%"></div>
+            <div class="q-ref" style="left:66.67%"></div>
+          </div>
+          <span id="qcv-count" class="q-count"></span>
+        </div>
+
+        <div class="quality-row">
+          <span class="q-label">Attk1</span>
           <div class="q-bar">
             <div id="qa1-low"  class="q-seg q-low"></div>
             <div id="qa1-mid"  class="q-seg q-mid"></div>
@@ -617,7 +629,7 @@
           <span id="qa1-count" class="q-count"></span>
         </div>
         <div class="quality-row">
-          <span class="q-label">A2</span>
+          <span class="q-label">Attk2</span>
           <div class="q-bar">
             <div id="qa2-low"  class="q-seg q-low"></div>
             <div id="qa2-mid"  class="q-seg q-mid"></div>
@@ -628,7 +640,7 @@
           <span id="qa2-count" class="q-count"></span>
         </div>
         <div class="quality-row">
-          <span class="q-label">A3</span>
+          <span class="q-label">Attk3</span>
           <div class="q-bar">
             <div id="qa3-low"  class="q-seg q-low"></div>
             <div id="qa3-mid"  class="q-seg q-mid"></div>
@@ -638,18 +650,7 @@
           </div>
           <span id="qa3-count" class="q-count"></span>
         </div>
-        <div class="quality-row">
-          <span class="q-label">CV</span>
-          <div class="q-bar">
-            <div id="qcv-low"  class="q-seg q-low"></div>
-            <div id="qcv-mid"  class="q-seg q-mid"></div>
-            <div id="qcv-high" class="q-seg q-high"></div>
-            <div class="q-ref" style="left:33.33%"></div>
-            <div class="q-ref" style="left:66.67%"></div>
-          </div>
-          <span id="qcv-count" class="q-count"></span>
-        </div>
-      </div>
+              </div>
       <div class="quality-legend">
         <span class="q-legend-item"><span class="q-legend-dot" style="background:var(--danger)"></span>Low values</span>
         <span class="q-legend-item"><span class="q-legend-dot" style="background:var(--scout)"></span>Mid values</span>
@@ -796,7 +797,7 @@
         $(id).classList.remove("placeholder");
       });
 
-      addHistory(`A1:${card.a}  A2:${card.b}  A3:${card.c}  CV:${card.q}`);
+      addHistory(`Attk1:${card.a}  Attk2:${card.b}  Attk3:${card.c}  Cover:${card.q}`);
       updateStatus();
       updateQuality();
 
@@ -825,7 +826,7 @@
         $("peekC").textContent = card.c;
         $("peekQ").textContent = card.q;
         $("peekPanel").querySelector(".peek-title").textContent = "SCOUT — NEXT CARD";
-        addHistory(`SCOUT: A1:${card.a}  A2:${card.b}  A3:${card.c}  CV:${card.q}`);
+        addHistory(`SCOUT: Attk1:${card.a}  Attk2:${card.b}  Attk3:${card.c}  Cover:${card.q}`);
       }
 
       $("peekPanel").style.display = "block";
