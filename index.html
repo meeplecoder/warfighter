@@ -20,6 +20,7 @@
       --accent: #d7d2b2;
       --accentText: #111318;
       --danger: #ef8b8b;
+      --scout: #c8a84b;
       --safeBottom: env(safe-area-inset-bottom, 0px);
       --safeTop: env(safe-area-inset-top, 0px);
     }
@@ -95,6 +96,79 @@
       border-radius: 12px;
       font-weight: 700;
       cursor: pointer;
+    }
+
+    #scoutBtn {
+      border-color: var(--scout);
+      color: var(--scout);
+    }
+
+    #scoutBtn.used {
+      opacity: 0.35;
+      cursor: not-allowed;
+      border-color: var(--border);
+      color: var(--muted);
+    }
+
+    .peek-panel {
+      display: none;
+      border: 1px solid var(--scout);
+      background: color-mix(in srgb, var(--scout) 8%, var(--panel));
+      border-radius: 12px;
+      padding: 10px 40px 10px 12px;
+      margin-bottom: 10px;
+      position: relative;
+    }
+
+    .peek-title {
+      display: block;
+      font-size: 0.67rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--scout);
+      margin-bottom: 8px;
+    }
+
+    .peek-values {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      text-align: center;
+    }
+
+    .peek-slot {
+      display: block;
+      font-size: 0.58rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 1px;
+    }
+
+    .peek-num {
+      display: block;
+      font-size: 1.55rem;
+      font-weight: 900;
+      color: var(--scout);
+      line-height: 1;
+    }
+
+    .peek-num.cover-num {
+      color: #b9d7e8;
+    }
+
+    .peek-dismiss {
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 4px 6px;
+      line-height: 1;
     }
 
     .status {
@@ -332,8 +406,9 @@
       </div>
 
       <div class="small-actions">
-        <button id="historyBtn" class="icon-btn" type="button" aria-label="Mostrar historial">HIST</button>
-        <button id="resetBtn" class="icon-btn" type="button" aria-label="Reiniciar mazo">RESET</button>
+        <button id="historyBtn" class="icon-btn" type="button" aria-label="Show history">HIST</button>
+        <button id="scoutBtn" class="icon-btn" type="button" aria-label="Scout — peek top card">SCOUT</button>
+        <button id="resetBtn" class="icon-btn" type="button" aria-label="Reset deck">RESET</button>
       </div>
     </div>
 
@@ -354,30 +429,53 @@
 
     <div id="event" class="event" role="status" aria-live="polite"></div>
 
+    <div id="peekPanel" class="peek-panel" role="status" aria-live="polite">
+      <span class="peek-title">SCOUT — NEXT CARD</span>
+      <div class="peek-values">
+        <div>
+          <span class="peek-slot">ATTK 1</span>
+          <span id="peekA" class="peek-num">—</span>
+        </div>
+        <div>
+          <span class="peek-slot">ATTK 2</span>
+          <span id="peekB" class="peek-num">—</span>
+        </div>
+        <div>
+          <span class="peek-slot">ATTK 3</span>
+          <span id="peekC" class="peek-num">—</span>
+        </div>
+        <div>
+          <span class="peek-slot">COVER</span>
+          <span id="peekQ" class="peek-num cover-num">—</span>
+        </div>
+      </div>
+      <button id="peekDismiss" class="peek-dismiss" type="button" aria-label="Dismiss scout">×</button>
+    </div>
+
     <section class="random-grid" aria-live="polite">
       <div class="random-box primary-c">
-        <div class="random-label">C</div>
+        <div class="random-label">COVER</div>
         <div id="q" class="random-value placeholder">—</div>
       </div>
 
       <div class="random-box">
-        <div class="random-label">X</div>
+        <div class="random-label">ATTK 1</div>
         <div id="a" class="random-value placeholder">—</div>
       </div>
 
       <div class="random-box">
-        <div class="random-label">Y</div>
+        <div class="random-label">ATTK 2</div>
         <div id="b" class="random-value placeholder">—</div>
       </div>
 
       <div class="random-box">
-        <div class="random-label">Z</div>
+        <div class="random-label">ATTK 3</div>
         <div id="c" class="random-value placeholder">—</div>
       </div>
     </section>
 
     <p class="use-hint">
-      X &nbsp;·&nbsp; Y &nbsp;·&nbsp; Z &nbsp;·&nbsp; C
+      ATTK 1 &nbsp;·&nbsp; ATTK 2 &nbsp;·&nbsp; ATTK 3 &nbsp;·&nbsp; COVER
     </p>
 
     <section id="historyPanel" class="history-panel">
@@ -440,6 +538,8 @@
     let deck = [];
     let drawCount = 0;
     let reshuffleCount = 0;
+    let peeksUsed = 0;
+    const MAX_PEEKS = 1;
     let eventTimer = null;
 
     const $ = id => document.getElementById(id);
@@ -461,12 +561,16 @@
       cards.splice(insertIndex, 0, {...RESHUFFLE_CARD});
 
       deck = cards;
+      peeksUsed = 0;
+      hidePeek();
+      updateScoutBtn();
       updateStatus();
     }
 
     function resetGame() {
       drawCount = 0;
       reshuffleCount = 0;
+      peeksUsed = 0;
 
       ["a", "b", "c", "q"].forEach(id => {
         $(id).textContent = "—";
@@ -475,12 +579,14 @@
 
       $("history").innerHTML = "";
       hideEvent();
+      hidePeek();
       buildDeck();
       updateStatus();
     }
 
     function drawCard() {
       hideEvent();
+      hidePeek();
 
       if (!deck.length) {
         buildDeck();
@@ -490,11 +596,9 @@
 
       if (card.reshuffle) {
         reshuffleCount++;
-        addHistory("RESHUFFLE");
+        addHistory("── RESHUFFLE ──");
         showEvent("RESHUFFLE — deck reset");
 
-        // Reconstruct complete deck, shuffle, reinsert reshuffle card,
-        // then immediately draw again for the same .
         buildDeck();
         updateStatus();
 
@@ -512,13 +616,53 @@
         $(id).classList.remove("placeholder");
       });
 
-      addHistory(`X:${card.a}  Y:${card.b}  Z:${card.c}  C:${card.q}`);
+      addHistory(`A1:${card.a}  A2:${card.b}  A3:${card.c}  CV:${card.q}`);
       updateStatus();
 
-      // Small optional tactile feedback where supported.
       if (navigator.vibrate) {
         navigator.vibrate(15);
       }
+    }
+
+    function scout() {
+      if (peeksUsed >= MAX_PEEKS || !deck.length) return;
+
+      const card = deck[0];
+      peeksUsed++;
+      updateScoutBtn();
+
+      if (card.reshuffle) {
+        $("peekA").textContent = "—";
+        $("peekB").textContent = "—";
+        $("peekC").textContent = "—";
+        $("peekQ").textContent = "—";
+        $("peekPanel").querySelector(".peek-title").textContent = "SCOUT — RESHUFFLE NEXT";
+        addHistory("SCOUT: RESHUFFLE NEXT");
+      } else {
+        $("peekA").textContent = card.a;
+        $("peekB").textContent = card.b;
+        $("peekC").textContent = card.c;
+        $("peekQ").textContent = card.q;
+        $("peekPanel").querySelector(".peek-title").textContent = "SCOUT — NEXT CARD";
+        addHistory(`SCOUT: A1:${card.a}  A2:${card.b}  A3:${card.c}  CV:${card.q}`);
+      }
+
+      $("peekPanel").style.display = "block";
+
+      if (navigator.vibrate) {
+        navigator.vibrate([10, 30, 10]);
+      }
+    }
+
+    function hidePeek() {
+      $("peekPanel").style.display = "none";
+    }
+
+    function updateScoutBtn() {
+      const btn = $("scoutBtn");
+      const exhausted = peeksUsed >= MAX_PEEKS;
+      btn.classList.toggle("used", exhausted);
+      btn.disabled = exhausted;
     }
 
     function addHistory(text) {
@@ -564,6 +708,8 @@
 
     $("drawBtn").addEventListener("click", drawCard);
     $("resetBtn").addEventListener("click", resetGame);
+    $("scoutBtn").addEventListener("click", scout);
+    $("peekDismiss").addEventListener("click", hidePeek);
     $("historyBtn").addEventListener("click", () => toggleHistory());
     $("historyToggle").addEventListener("click", () => toggleHistory());
 
